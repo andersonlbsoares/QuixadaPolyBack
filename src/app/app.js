@@ -24,7 +24,7 @@ const player2 = new Player("Jogador 2", "#ffff00");
 gameController.adicionarSessao(sessao);
 sessao.addPlayer(player1);
 sessao.addPlayer(player2);
-
+sessao.startSession();
 const routes = createRoutes(gameController);
 app.use(routes);
 

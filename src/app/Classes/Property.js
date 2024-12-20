@@ -1,12 +1,17 @@
 import Tile from "./Tile.js";
 
 export default class Property extends Tile {
+  price;
+  rent;
+  houses;
+  hotel;
+  owner;
   constructor(name, price) {
     super(name);
     this.price = price;
     this.rent = price * 0.15;
     this.houses = 0;
-    this.hotels = 0;
+    this.hotel = false;
     this.owner = null;
   }
 
@@ -16,7 +21,15 @@ export default class Property extends Tile {
 
   payRent(player) {
     if (this.owner && this.owner !== player) {
-      const value = this.rent * (1 + this.houses * 0.1 + this.hotels * 0.2);
+      if (this.hotel) {
+        console.log(`${player.name} pagou $${this.rent * 2} de aluguel para ${this.owner.name}`);
+        player.balance -= this.rent * 2;
+        this.owner.balance += this.rent * 2;
+      }else{
+        let value = this.rent;
+        if (this.houses > 0) {
+          value = this.rent * this.houses;
+      }
       console.log(
         `${player.name} pagou $${value} de aluguel para ${this.owner.name}`
       );
@@ -24,17 +37,17 @@ export default class Property extends Tile {
       this.owner.balance += value;
     }
   }
+}
 
   onLand(player) {
     super.onLand(player);
     if (this.owner === null) {
-      console.log(
-        `${player.name} pode comprar ${this.name} por $${this.price}`
-      );
+      return `${player.name} pode comprar ${this.name} por $${this.price}`
     } else if (this.owner !== player) {
       this.payRent(player);
+      return `${player.name} pagou aluguel para ${this.owner.name}`
     } else {
-      console.log(`${player.name} já é dono de ${this.name}`);
+      return `${player.name} já é dono de ${this.name}`
     }
   }
 }

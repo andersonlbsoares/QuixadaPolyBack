@@ -1,5 +1,6 @@
 import Board from "./Board.js";
 export default class SessionController {
+	anotacoes = [];
 	sessionNumber;
 	players = [];
 	board;
@@ -16,6 +17,7 @@ export default class SessionController {
 	startGame() {
 		const sessionNumber = Math.floor(Math.random() * 1000);
 		this.sessionNumber = sessionNumber;
+		this.anotacoes.push(`Sessão ${sessionNumber} iniciada`);
 		return sessionNumber;
 	}
 
@@ -32,6 +34,7 @@ export default class SessionController {
 
 	addPlayer(player) {
 		this.players.push(player);
+		this.anotacoes.push(`O Jogador ${player.name} entrou na sessão ${this.sessionNumber}`);
 	}
 
 	rollDice() {
@@ -52,43 +55,47 @@ export default class SessionController {
 			if (value < diceValues.total) {
 				this.currentPlayerIndex = this.players.indexOf(player);
 			}
+			this.anotacoes.push(`O Jogador ${player.name} tirou ${diceValues.total}`);
 			response.push({
 				player,
 				dice1: diceValues.die1,
 				dice2: diceValues.die2,
 				total: diceValues.total,
 			});
+
 		});
 		return response;
 	}
 
-	// EXPERIMENTAL
-
-	// Avança o turno do jogador
-	playTurn() {
+	playTurn(playerName) {
 		if (!this.isGameRunning) {
 			console.log("O jogo já terminou!");
 			return;
 		}
 
 		const player = this.players[this.currentPlayerIndex];
-		console.log(`Vez de ${player.name}`);
-
+		if (player.name !== playerName) {
+			console.log("Não é a vez desse jogador! esperando: ", player.name);
+			return { message: "Não é sua vez", code: 1 };
+		}
 		if (player.isInJail) {
 			this.handleJail(player);
 		} else {
 			const diceRoll = this.rollDice();
-			this.movePlayer(player, diceRoll);
+			this.anotacoes.push(`O Jogador ${player.name} tirou ${diceRoll.total}`);
+			this.movePlayer(player, diceRoll.total);
 		}
+		return this.statusGame();
+	}
 
-		this.nextPlayer();
+	getPlayer(playerName) {
+		return this.players.find((player) => player.name === playerName);
 	}
 
 	movePlayer(player, steps) {
 		const previousPosition = player.position;
 		player.move(steps, this.board.tiles.length);
 
-		// Verifica se o jogador passou pelo Início
 		if (previousPosition > player.position) {
 			const startTile = this.board.getTile(0);
 			if (startTile.onPass) {
@@ -97,14 +104,58 @@ export default class SessionController {
 		}
 
 		const currentTile = this.board.getTile(player.position);
-		currentTile.onLand(player);
+		this.anotacoes.push(`${player.name} caiu em ${currentTile.name}`);
+		let state = currentTile.onLand(player);
+		this.anotacoes.push(state);
 
 		if (player.balance <= 0) {
 			console.log(`${player.name} foi à falência!`);
+			this.anotacoes.push(`${player.name} foi à falência!`);
 			this.removePlayer(player);
 		}
 	}
 
+	nextPlayer() {
+		this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+
+		if (this.players.length === 1) {
+			this.endGame();
+		}
+	}
+	
+	buyProperty(player) {
+		console.log("Comprando propriedade", player);
+		const currentTile = this.board.getTile(player.position);
+		if (currentTile.owner) {
+			console.log("A propriedade já tem dono.");
+			return;
+		}
+
+		if (player.balance < currentTile.price) {
+			console.log("Saldo insuficiente.");
+			return;
+		}
+
+		if (currentTile.price) {
+			player.balance -= currentTile.price;
+			currentTile.owner = player;
+			
+			console.log(`${player.name} comprou ${currentTile.name} por ${currentTile.price}.`);
+			this.anotacoes.push(`${player.name} comprou ${currentTile.name} por ${currentTile.price}.`);
+			this.nextPlayer();
+			return this.statusGame();
+		}else{
+			this.anotacoes.push("A propriedade não está à venda.");
+			return ({ message: "A propriedade não está à venda.", code: 1 });
+		}
+	}
+
+	endTurn(player) {
+		this.nextPlayer();
+		this.anotacoes.push(`O Jogador ${player.name} terminou o turno.`);
+		return this.statusGame();
+	}
+	
 	handleJail(player) {
 		console.log(`${player.name} está na prisão.`);
 		player.turnsInJail += 1;
@@ -118,21 +169,11 @@ export default class SessionController {
 		}
 	}
 
-	nextPlayer() {
-		this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-
-		if (this.players.length === 1) {
-			this.endGame();
-		}
-	}
-
-	// Remove um jogador do jogo
 	removePlayer(player) {
 		console.log(`${player.name} está fora do jogo.`);
 		this.players = this.players.filter((p) => p !== player);
 	}
 
-	// Finaliza o jogo
 	endGame() {
 		this.isGameRunning = false;
 		console.log(`O jogo terminou! O vencedor é ${this.players[0].name}`);
@@ -140,6 +181,7 @@ export default class SessionController {
 
 	statusGame() {
 		return {
+			anotacoes: this.anotacoes,
 			session: this.sessionNumber,
 			players: this.players,
 			board: this.board,

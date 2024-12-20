@@ -1,9 +1,11 @@
 import express from "express";
 import SessionController from "./Classes/SessionController.js";
 import Player from "./Classes/Player.js";
+import createSessionUserMiddleware from './services/SessionUserMiddleware.js';
 const router = express.Router();
 
 export default (gameController) => {
+	const SessionUserMiddleware = createSessionUserMiddleware(gameController);
 	//GameController
 	router.post("/sessao", (req, res) => {
 		const novaSessao = new SessionController();
@@ -72,5 +74,40 @@ export default (gameController) => {
 		res.status(200).send(response);
 	});
 
+	//Jogar
+	router.get("/sessao/:sessionNumber/jogar", SessionUserMiddleware, (req, res) => {
+		let session = req.session;
+		let response = session.playTurn(req.player.name);
+		if(response.code === 1){
+			res.status(403).send(response);
+			return;
+		}
+		res.status(200).send(response);
+	}
+	);
+
+	router.get("/sessao/:sessionNumber/comprar", SessionUserMiddleware, (req, res) => {
+		let session = req.session;
+		let response = session.buyProperty(req.player);
+		if(response.code === 1){
+			res.status(403).send(response);
+			return;
+		}
+		res.status(200).send(response);
+	}
+	);
+
+	router.get("/sessao/:sessionNumber/passar", (req, res) => {
+		const sessionNumber = req.params.sessionNumber;
+		const playerName = req.params.playerName;
+		let session = gameController.obterSessao(sessionNumber);
+		let response = session.endTurn(playerName);
+		if(response.code === 1){
+			res.status(403).send(response);
+			return;
+		}
+		res.status(200).send(response);
+	}
+	);
 	return router;
 };
