@@ -1,8 +1,8 @@
 import Tile from "./Tile.js";
 
 export default class LuckTile extends Tile {
-  constructor() {
-    super("Sorte");
+  constructor(nome, row, column) {
+    super(nome, row, column);
   }
 
   onLand(player) {

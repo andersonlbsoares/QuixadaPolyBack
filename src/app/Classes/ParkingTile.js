@@ -2,7 +2,7 @@ import Tile from "./Tile.js";
 
 export default class ParkingTile extends Tile {
   constructor() {
-    super("Estacionamento");
+    super("Estacionamento", 1, 1);
   }
 
   onLand(player) {

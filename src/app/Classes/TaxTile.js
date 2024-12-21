@@ -1,8 +1,8 @@
 import Tile from "./Tile.js";
 
 export default class TaxTile extends Tile {
-  constructor() {
-    super("Imposto");
+  constructor(name, row, column) {
+    super(name, row, column);
   }
 
   onLand(player) {

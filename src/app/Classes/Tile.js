@@ -1,6 +1,8 @@
 export default class Tile {
-  constructor(name) {
+  constructor(name, row, column) {
     this.name = name;
+    this.row = row;
+    this.column = column;
   }
 
   onLand(player) {

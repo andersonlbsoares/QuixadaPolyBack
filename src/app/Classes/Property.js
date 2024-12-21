@@ -6,8 +6,8 @@ export default class Property extends Tile {
   houses;
   hotel;
   owner;
-  constructor(name, price) {
-    super(name);
+  constructor(name, price, row, column) {
+    super(name, row, column);
     this.price = price;
     this.rent = price * 0.15;
     this.houses = 0;
@@ -41,9 +41,11 @@ export default class Property extends Tile {
 
   onLand(player) {
     super.onLand(player);
-    if (this.owner === null) {
+    if (this.owner === null && player.balance >= this.price) {
       return `${player.name} pode comprar ${this.name} por $${this.price}`
-    } else if (this.owner !== player) {
+    } else if(this.owner === null && player.balance < this.price){
+      return `${player.name} não tem dinheiro suficiente para comprar ${this.name}`
+    }else if (this.owner !== player) {
       this.payRent(player);
       return `${player.name} pagou aluguel para ${this.owner.name}`
     } else {

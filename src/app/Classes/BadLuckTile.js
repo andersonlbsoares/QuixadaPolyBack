@@ -1,8 +1,8 @@
 import Tile from "./Tile.js";
 
 export default class BadLuckTile extends Tile {
-  constructor() {
-    super("Má Sorte");
+  constructor(name, row, column) {
+    super(name, row, column);
   }
 
   onLand(player) {

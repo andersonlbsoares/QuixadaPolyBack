@@ -2,7 +2,7 @@ import Tile from "./Tile.js";
 
 export default class GoToJailTile extends Tile {
   constructor() {
-    super("Vá para a Prisão");
+    super("Vá para a Prisão", 1, 11);
   }
 
   onLand(player) {

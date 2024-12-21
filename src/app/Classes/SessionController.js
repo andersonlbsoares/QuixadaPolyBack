@@ -11,13 +11,13 @@ export default class SessionController {
 		this.board = new Board();
 		this.currentPlayerIndex = 0;
 		this.isGameRunning = false;
-		this.sessionNumber = sessionNumber || startGame();
+		this.sessionNumber = sessionNumber || this.startGame();
 	}
 
 	startGame() {
 		const sessionNumber = Math.floor(Math.random() * 1000);
 		this.sessionNumber = sessionNumber;
-		this.anotacoes.push(`Sessão ${sessionNumber} iniciada`);
+		this.anotacoes.push(`Sessão iniciada`);
 		return sessionNumber;
 	}
 
@@ -51,8 +51,10 @@ export default class SessionController {
 		let value = 0;
 		let response = [];
 		this.players.forEach((player) => {
+
 			let diceValues = this.rollDice();
 			if (value < diceValues.total) {
+				value = diceValues.total;
 				this.currentPlayerIndex = this.players.indexOf(player);
 			}
 			this.anotacoes.push(`O Jogador ${player.name} tirou ${diceValues.total}`);
@@ -64,14 +66,18 @@ export default class SessionController {
 			});
 
 		});
+		this.anotacoes.push(`O Jogador ${this.players[this.currentPlayerIndex].name} começa o jogo.`);
 		return response;
 	}
 
 	playTurn(playerName) {
 		if (!this.isGameRunning) {
 			console.log("O jogo já terminou!");
-			return;
+			return { message: "O jogo já terminou ou ainda nem começou", code: 1 };
 		}
+
+		let dice1;
+		let dice2;
 
 		const player = this.players[this.currentPlayerIndex];
 		if (player.name !== playerName) {
@@ -83,9 +89,13 @@ export default class SessionController {
 		} else {
 			const diceRoll = this.rollDice();
 			this.anotacoes.push(`O Jogador ${player.name} tirou ${diceRoll.total}`);
+			dice1 = diceRoll.die1;
+			dice2 = diceRoll.die2;
 			this.movePlayer(player, diceRoll.total);
 		}
-		return this.statusGame();
+		let status = this.statusGame();
+		status.diceRoll = { dice1, dice2 };
+		return status; 
 	}
 
 	getPlayer(playerName) {

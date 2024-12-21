@@ -89,7 +89,7 @@ export default (gameController) => {
 	router.get("/sessao/:sessionNumber/comprar", SessionUserMiddleware, (req, res) => {
 		let session = req.session;
 		let response = session.buyProperty(req.player);
-		if(response.code === 1){
+		if(response?.code === 1){
 			res.status(403).send(response);
 			return;
 		}
