@@ -6,6 +6,6 @@ export default class ParkingTile extends Tile {
   }
 
   onLand(player) {
-    super.onLand(player);
+    return super.onLand(player);
   }
 }

@@ -6,8 +6,8 @@ export default class StartTile extends Tile {
   }
 
   onLand(player) {
-    super.onLand(player);
     console.log(`${player.name} está no Início.`);
+    return super.onLand(player);
   }
 
   onPass(player) {

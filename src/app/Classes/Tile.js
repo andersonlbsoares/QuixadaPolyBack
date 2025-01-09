@@ -7,5 +7,6 @@ export default class Tile {
 
   onLand(player) {
     console.log(`${player.name} caiu em ${this.name}`);
+    return `${player.name} caiu em ${this.name}`;
   }
 }

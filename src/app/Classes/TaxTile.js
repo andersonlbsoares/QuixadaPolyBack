@@ -6,6 +6,6 @@ export default class TaxTile extends Tile {
   }
 
   onLand(player) {
-    super.onLand(player);
+    return super.onLand(player);
   }
 }

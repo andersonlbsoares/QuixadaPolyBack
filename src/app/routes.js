@@ -75,7 +75,17 @@ export default (gameController) => {
 	});
 
 	//Jogar
+	router.get("/sessao/:sessionNumber/checaopcoes", SessionUserMiddleware, (req, res) => {
+		let session = req.session;
+		let response = session.checkAction(req.player.name);
+		res.status(200).send(response);
+	});
+
 	router.get("/sessao/:sessionNumber/jogar", SessionUserMiddleware, (req, res) => {
+		if(req.player.status === "waiting action"){
+			res.status(403).send(response);
+			return;
+		}
 		let session = req.session;
 		let response = session.playTurn(req.player.name);
 		if(response.code === 1){
@@ -97,11 +107,10 @@ export default (gameController) => {
 	}
 	);
 
-	router.get("/sessao/:sessionNumber/passar", (req, res) => {
-		const sessionNumber = req.params.sessionNumber;
-		const playerName = req.params.playerName;
-		let session = gameController.obterSessao(sessionNumber);
-		let response = session.endTurn(playerName);
+	router.get("/sessao/:sessionNumber/passar", SessionUserMiddleware, (req, res) => {
+		const player = req.player;
+		let session = req.session;
+		let response = session.endTurn(player);
 		if(response.code === 1){
 			res.status(403).send(response);
 			return;

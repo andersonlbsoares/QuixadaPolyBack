@@ -9,7 +9,8 @@ export default class GameController {
 	}
 
 	removerSessao(sessionNumber) {
-		this.sessoes = this.sessoes.filter((sessao) => sessao.sessionNumber !== sessionNumber);
+		this.sessoes = this.sessoes.filter((sessao) => sessao.sessionNumber !== parseInt(sessionNumber));
+		console.log(this.sessoes);
 	}
 
 	obterSessoes() {

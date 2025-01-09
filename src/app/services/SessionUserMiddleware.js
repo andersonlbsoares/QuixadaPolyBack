@@ -1,10 +1,15 @@
 export default (gameController) => {
     return function SessionUserMiddleware(req, res, next) {
         try {
+            if(req.url === '/sessao') return next();
             const sessionNumber = req.params.sessionNumber;
             const playerName = req.query.playerName;
+            if (!sessionNumber || !playerName) {
+                return res.status(401).json({ message: 'Sessão e/ou jogador não informado(a)' });
+            }
             let session = gameController.obterSessao(sessionNumber);
             let player = session.getPlayer(playerName);
+            
             if (!player) {
                 return res.status(401).json({ message: 'Jogador e/ou sessão não encontrado(a)' });
             }

@@ -6,8 +6,8 @@ export default class GoToJailTile extends Tile {
   }
 
   onLand(player) {
-    super.onLand(player);
     console.log(`${player.name} foi enviado para a Prisão!`);
     player.position = 10;
+    return super.onLand(player);
   }
 }
