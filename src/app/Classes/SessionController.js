@@ -6,6 +6,7 @@ import TaxTile from "./TaxTile.js";
 import JailTile from "./JailTile.js";
 import GoToJailTile from "./GoToJailTile.js";
 import ParkingTile from "./ParkingTile.js";
+import StartTile from "./StartTile.js";
 
 export default class SessionController {
 	anotacoes = [];
@@ -184,6 +185,13 @@ export default class SessionController {
 		} else if(currentTile instanceof ParkingTile){
 			resposta.message = "Você caiu em " + currentTile.name + " estacionamento gratuito.";
 			resposta.button1 = "Finalizar Turno";
+			resposta.button2 = "";
+			resposta.route1 = "passar";
+			resposta.route2 = "";
+			return resposta
+		} else if(currentTile instanceof StartTile){
+			resposta.message = "Você caiu em " + currentTile.name + " receba 200";
+			resposta.button1 = "Receber";
 			resposta.button2 = "";
 			resposta.route1 = "passar";
 			resposta.route2 = "";
