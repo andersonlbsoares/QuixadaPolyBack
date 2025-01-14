@@ -290,7 +290,7 @@ export default class SessionController {
 	// Funções auxiliares
 	handlePropertyTile(player, currentTile, resposta) {
 		if (currentTile.owner === player) {
-			this.handleOwnProperty(player, currentTile, resposta);
+			this.handleOwnProperty(currentTile, resposta);
 		} else if (currentTile.owner) {
 			this.handleOtherPlayerProperty(player, currentTile, resposta);
 		} else {

@@ -128,12 +128,14 @@ export default (gameController) => {
 	router.get("/sessao/:sessionNumber/pagar", SessionUserMiddleware, (req, res) => {
 		let player = req.player;
 		let tile = req.tile;
+		let session = req.session;
 		let response = player.payRent(tile.rent);
 		tile.owner.balance += tile.rent;
 		if(response?.code === 1){
 			res.status(403).send(response);
 			return;
 		}
+		session.endTurn(player);
 		res.status(200).send(response);
 	});
 
