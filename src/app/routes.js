@@ -121,7 +121,9 @@ export default (gameController) => {
 
 	router.get("/sessao/:sessionNumber/construir", SessionUserMiddleware, (req, res) => {
 		let tile = req.tile;
+		let session = req.session;
 		let response = tile.buildHouse();
+		session.endTurn(req.player);
 		res.status(200).send(response);
 	});
 
