@@ -15,6 +15,8 @@ export default (gameController) => {
             }
             req.player = player;
             req.session = session;
+            req.tile = session.board.getTile(player.position);
+
             next();
         } catch (error) {
             console.log(error);

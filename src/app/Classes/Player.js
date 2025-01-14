@@ -5,6 +5,9 @@ export default class Player {
 	balance;
 	isInJail;
 	status;
+	turnsInJail;
+	isBankrupt;
+
 	constructor(name, color) {
 		this.color = color;
 		this.name = name;
@@ -12,6 +15,8 @@ export default class Player {
 		this.balance = 1500;
 		this.isInJail = false;
 		this.status = "not your turn";
+		this.turnsInJail = 0;
+		this.isBankrupt = false;
 	}
 
 	move(steps) {
@@ -21,4 +26,17 @@ export default class Player {
 	changeInJailStatus() {
 		this.isInJail = !this.isInJail;
 	}
+
+	payRent(value) {
+		this.balance -= value;
+	}
+
+	setJailStatus(status) {
+		this.isInJail = status;
+	}
+
+	setBankruptStatus(status) {
+		this.isBankrupt = status;
+	}
+
 }

@@ -118,5 +118,42 @@ export default (gameController) => {
 		res.status(200).send(response);
 	}
 	);
+
+	router.get("/sessao/:sessionNumber/construir", SessionUserMiddleware, (req, res) => {
+		let tile = req.tile;
+		let response = tile.buildHouse();
+		res.status(200).send(response);
+	});
+
+	router.get("/sessao/:sessionNumber/pagar", SessionUserMiddleware, (req, res) => {
+		let player = req.player;
+		let tile = req.tile;
+		let response = player.payRent(tile.rent);
+		tile.owner.balance += tile.rent;
+		if(response?.code === 1){
+			res.status(403).send(response);
+			return;
+		}
+		res.status(200).send(response);
+	});
+
+	router.get("/sessao/:sessionNumber/falencia", SessionUserMiddleware, (req, res) => {
+		let player = req.player;
+		let tile = req.tile;
+		let session = req.session;
+		let playerToPay = tile.owner;
+		session.bankruptcy(player, playerToPay);
+		res.status(200).send({message: "Falência realizada com sucesso"});	
+	});
+
+	//vender
+	router.get("/sessao/:sessionNumber/vender/:propertyName", SessionUserMiddleware, (req, res) => {
+		let session = req.session;
+		let player = req.player;
+		let propertyName = req.params.propertyName;
+		let response = session.sellProperty(player, propertyName);
+		res.status(200).send(response);
+	});
+
 	return router;
 };

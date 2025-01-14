@@ -1,13 +1,5 @@
 import Board from "./Board.js";
 import Property from "./Property.js";
-import LuckTile from "./LuckTile.js";
-import BadLuckTile from "./BadLuckTile.js";
-import TaxTile from "./TaxTile.js";
-import JailTile from "./JailTile.js";
-import GoToJailTile from "./GoToJailTile.js";
-import ParkingTile from "./ParkingTile.js";
-import StartTile from "./StartTile.js";
-
 export default class SessionController {
 	anotacoes = [];
 	sessionNumber;
@@ -29,11 +21,6 @@ export default class SessionController {
 		this.anotacoes.push(`O Jogador ${player.name} entrou na sessão ${this.sessionNumber}`);
 	}
 	
-	removePlayer(player) {
-		console.log(`${player.name} está fora do jogo.`);
-		this.players = this.players.filter((p) => p !== player);
-	}
-	
 	getPlayer(playerName) {
 		return this.players.find((player) => player.name === playerName);
 	}
@@ -51,37 +38,31 @@ export default class SessionController {
 
 		const currentTile = this.board.getTile(player.position);
 		let state = currentTile.onLand(player);
-		console.log("tile",currentTile);
-		console.log("estado",state);
 		this.anotacoes.push(state);
-
-		if (player.balance <= 0) {
-			console.log(`${player.name} foi à falência!`);
-			this.anotacoes.push(`${player.name} foi à falência!`);
-			this.removePlayer(player);
-		}
+		
 	}
 
 	nextPlayer() {
-		this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-		let player = this.players[this.currentPlayerIndex];
+		let player;
+		do{
+			this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+			player = this.players[this.currentPlayerIndex];
+		}while(player.isBankrupt);
 		player.status = "your turn";
-		if (this.players.length === 1) {
-			this.endGame();
-		}
+		
 	}
 
-	handleJail(player) {
-		console.log(`${player.name} está na prisão.`);
-		player.turnsInJail += 1;
-
-		if (player.turnsInJail >= 3) {
-			console.log(`${player.name} foi libertado da prisão após 3 turnos.`);
-			player.isInJail = false;
-			player.turnsInJail = 0;
-		} else {
-			console.log(`${player.name} deve esperar.`);
-		}
+	bankruptcy(player, playerToPay) {
+		let propertiesValue = 0;
+		this.board.tiles.forEach((tile) => {
+			if (tile.owner === player) {
+				propertiesValue += tile.price;
+			}
+		});
+		playerToPay.balance += propertiesValue;
+		player.setBankruptStatus(true);
+		anotacoes.push(`${player.name} foi à falência`);
+		anotacoes.push(`${playerToPay.name} recebeu a bolada de $${propertiesValue}`);
 	}
 
 
@@ -95,109 +76,50 @@ export default class SessionController {
 			total: die1 + die2,
 		};
 	}
+	
+	checkWinner(){
+		//checa se só tem um player isBankrupt false
+		let winner = this.players.filter((player) => !player.isBankrupt);
+		if(winner.length == 1 && this.players.length > 1){
+			return winner[0].name;
+		}
+		return false;
+	}
 
-	checkAction(playerName){
-		let player = this.getPlayer(playerName);
-		let currentTile = this.board.getTile(player.position);
-		
-		let resposta = {
+	checkAction(playerName) {
+		const player = this.getPlayer(playerName);
+		const currentTile = this.board.getTile(player.position);
+	
+		const resposta = {
 			message: "",
 			button1: "",
 			button2: "",
 			route1: "",
-			route2: ""
-		}
-
-		if(player.status == "not your turn"){
+			route2: "",
+			properties: []
+		};
+		
+		const winner = this.checkWinner();
+		if (winner) {
+			resposta.message = `O vencedor é ${winner}`;
+			resposta.button1 = winner;
+			return resposta
+		} else if (player.status === "not your turn") {
 			resposta.message = "Não é sua vez.";
 			return resposta;
-		}
-		if (player.status == "your turn") {
+		}else if (player.status === "your turn") {
 			resposta.message = "Sua vez, role os dados.";
 			return resposta;
 		}
-
-		if(currentTile instanceof Property){
-			if(currentTile.owner == player){
-				resposta.message = "Você caiu em " + currentTile.name + " que é sua propriedade, você pode construir por " + (currentTile.price/2).toFixed(2) + " ou finalizar o turno.";
-				resposta.button1 = "Finalizar Turno";
-				resposta.button2 = "Construir";
-				resposta.route1 = "passar";
-				resposta.route2 = "passar";
-				return resposta;
-			}else if(currentTile.owner != player && currentTile.owner){
-				resposta.message = "Você caiu em " + currentTile.name + " que é de " + currentTile.owner.name + " pague o aluguel de " + currentTile.rent;
-				resposta.button1 = "Pagar Aluguel";
-				resposta.button2 = "Falência";
-				resposta.route1 = "passar";
-				resposta.route2 = "passar";
-				return resposta;
-			} else {
-				if (player.balance >= currentTile.price) {
-				resposta.message = "Você caiu em " + currentTile.name + " que está disponível para compra por " + currentTile.price;
-				resposta.button1 = "Comprar";
-				resposta.button2 = "Não Comprar";
-				resposta.route1 = "comprar";
-				resposta.route2 = "passar";
-				} else {
-					resposta.message = "Você caiu em " + currentTile.name + " que está disponível para compra por " + currentTile.price + " mas você não tem dinheiro suficiente.";
-					resposta.button1 = "Não Comprar";
-					resposta.route1 = "passar";
-				}
-				return resposta;
-			}
-		} else if(currentTile instanceof LuckTile){
-			resposta.message = "Você caiu em " + currentTile.name + " tire uma carta de sorte.";
-			resposta.button1 = "Sorte";
-			resposta.button2 = "";
-			resposta.route1 = "passar";
-			resposta.route2 = "";
-			return resposta;
-		} else if(currentTile instanceof BadLuckTile){
-			resposta.message = "Você caiu em " + currentTile.name + " tire uma carta de má sorte.";
-			resposta.button1 = "Má Sorte";
-			resposta.button2 = "";
-			resposta.route1 = "passar";
-			resposta.route2 = "";
-			return resposta;
-		} else if(currentTile instanceof TaxTile){
-			resposta.message = "Você caiu em " + currentTile.name + " pague o imposto de " + currentTile.tax;
-			resposta.button1 = "Pagar";
-			resposta.button2 = "Falência";
-			resposta.route1 = "passar";
-			resposta.route2 = "passar";
-			return resposta;
-		} else if(currentTile instanceof JailTile){
-			resposta.message = "Você caiu em " + currentTile.name + " vá para a prisão.";
-			resposta.button1 = "Ir para a prisão";
-			resposta.button2 = "";
-			resposta.route1 = "passar";
-			resposta.route2 = "";
-			return resposta;
-		} else if(currentTile instanceof GoToJailTile){
-			resposta.message = "Você caiu em " + currentTile.name + " vá para a prisão.";
-			resposta.button1 = "Ir para a prisão";
-			resposta.button2 = "";
-			resposta.route1 = "passar";
-			resposta.route2 = "";			
-			
-			return resposta
-		} else if(currentTile instanceof ParkingTile){
-			resposta.message = "Você caiu em " + currentTile.name + " estacionamento gratuito.";
-			resposta.button1 = "Finalizar Turno";
-			resposta.button2 = "";
-			resposta.route1 = "passar";
-			resposta.route2 = "";
-			return resposta
-		} else if(currentTile instanceof StartTile){
-			resposta.message = "Você caiu em " + currentTile.name + " receba 200";
-			resposta.button1 = "Receber";
-			resposta.button2 = "";
-			resposta.route1 = "passar";
-			resposta.route2 = "";
-			return resposta
+	
+		if (currentTile instanceof Property) {
+			this.handlePropertyTile(player, currentTile, resposta)
 		}
-
+		else {
+			this.handleNonPropertyTile(currentTile, resposta);
+		}
+	
+		return resposta;
 	}
 
 	playTurn(playerName) {
@@ -215,7 +137,26 @@ export default class SessionController {
 			return { message: "Não é sua vez", code: 1 };
 		}
 		if (player.isInJail) {
-			this.handleJail(player);
+			const diceRoll = this.rollDice();
+			if (diceRoll.die1 === diceRoll.die2) {
+				this.anotacoes.push(`${player.name} tirou ${diceRoll.total} e foi libertado da prisão.`);
+				player.isInJail = false;
+				player.turnsInJail = 0;
+				dice1 = diceRoll.die1;
+				dice2 = diceRoll.die2;
+				this.movePlayer(player, diceRoll.total);
+			}else{
+				player.turnsInJail += 1;
+				this.anotacoes.push(`${player.name} está na prisão (${player.turnsInJail}/2).`);
+			}
+			
+			if (player.turnsInJail >= 2) {
+				this.anotacoes.push(`${player.name} foi libertado da prisão após 2 turnos.`);
+				player.isInJail = false;
+				player.turnsInJail = 0;
+				this.movePlayer(player, diceRoll.total);
+			}
+
 		} else {
 			const diceRoll = this.rollDice();
 			this.anotacoes.push(`O Jogador ${player.name} tirou ${diceRoll.total}`);
@@ -267,9 +208,25 @@ export default class SessionController {
 		}
 	}
 
+	sellProperty(player, propertyName) {
+		const property = this.board.tiles.find((tile) => tile.name === propertyName);
+		if (!property) {
+			console.log("Propriedade não encontrada.");
+			return;
+		}
+
+		if (property.owner !== player) {
+			console.log("Essa propriedade não é sua.");
+			return;
+		}
+
+		player.balance += property.price;
+		property.owner = null;
+		this.anotacoes.push(`${player.name} vendeu ${property.name} por ${property.price}.`);
+	}
+
 
 	// MANIPULAÇÃO DE SESSÃO
-
 	startGame() {
 		const sessionNumber = Math.floor(Math.random() * 1000);
 		this.sessionNumber = sessionNumber;
@@ -329,14 +286,55 @@ export default class SessionController {
 		};
 	}
 
-	
 
-
-
-	
-
-
-
-
+	// Funções auxiliares
+	handlePropertyTile(player, currentTile, resposta) {
+		if (currentTile.owner === player) {
+			this.handleOwnProperty(player, currentTile, resposta);
+		} else if (currentTile.owner) {
+			this.handleOtherPlayerProperty(player, currentTile, resposta);
+		} else {
+			this.handleUnownedProperty(player, currentTile, resposta);
+		}
+	}
+	handleOwnProperty(currentTile, resposta) {
+		resposta.message = `Você caiu em ${currentTile.name} que é sua propriedade, você pode construir por ${ (currentTile.price / 2).toFixed(2)} ou finalizar o turno.`;
+		resposta.button1 = "Finalizar Turno";
+		resposta.route1 = "passar";
+		resposta.button2 = "Construir";
+		resposta.route2 = "construir";
+	}
+	handleOtherPlayerProperty(player, currentTile, resposta) {
+		if (player.balance >= currentTile.rent) {
+			resposta.message = `Você caiu em ${currentTile.name} que é de ${currentTile.owner.name} pague o aluguel de ${currentTile.rent}`;
+			resposta.button1 = "Pagar Aluguel";
+			resposta.button2 = "Falência";
+			resposta.route1 = "pagar";
+			resposta.route2 = "falencia";
+		} else {
+			resposta.message = `Você caiu em ${currentTile.name} que é de ${currentTile.owner.name} mas você não tem dinheiro suficiente para pagar o aluguel.`;
+			resposta.properties = this.board.tiles.filter(tile => tile.owner === player);
+		}
+	}
+	handleUnownedProperty(player, currentTile, resposta) {
+		if (player.balance >= currentTile.price) {
+			resposta.message = `Você caiu em ${currentTile.name} que está disponível para compra por ${currentTile.price}`;
+			resposta.button1 = "Comprar";
+			resposta.route1 = "comprar";
+			resposta.button2 = "Não Comprar";
+			resposta.route2 = "passar";
+		} else {
+			resposta.message = `Você caiu em ${currentTile.name} que está disponível para compra por ${currentTile.price} mas você não tem dinheiro suficiente.`;
+			resposta.button1 = "Não Comprar";
+			resposta.route1 = "passar";
+		}
+	}
+	handleNonPropertyTile(currentTile, resposta) {
+		resposta.message = currentTile.feedback.message;
+		resposta.button1 = currentTile.feedback.option1;
+		resposta.button2 = currentTile.feedback.option2;
+		resposta.route1 = currentTile.feedback.route1;
+		resposta.route2 = currentTile.feedback.route2;
+	}
 
 }

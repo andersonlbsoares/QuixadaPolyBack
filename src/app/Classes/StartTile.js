@@ -2,7 +2,7 @@ import Tile from "./Tile.js";
 
 export default class StartTile extends Tile {
   constructor() {
-    super("Início", 11, 11);
+    super("Início", 11, 11, "Você caiu no Início, receba $200.", "Receber", "passar");
   }
 
   onLand(player) {
