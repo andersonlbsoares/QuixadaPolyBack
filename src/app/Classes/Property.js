@@ -1,11 +1,11 @@
 import Tile from "./Tile.js";
 
 export default class Property extends Tile {
-  price;
-  rent;
-  houses;
-  hotel;
-  owner;
+    price;
+    rent;
+    houses;
+    hotel;
+    owner;
   constructor(name, price, row, column) {
     super(name, row, column, "Você caiu em " + name);
     this.price = price;

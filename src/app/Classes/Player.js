@@ -1,6 +1,6 @@
 export default class Player {
-	color;
 	name;
+	color;
 	position;
 	balance;
 	isInJail;
@@ -21,10 +21,6 @@ export default class Player {
 
 	move(steps) {
 		this.position = (this.position + steps) % 40;
-	}
-
-	changeInJailStatus() {
-		this.isInJail = !this.isInJail;
 	}
 
 	payRent(value) {
