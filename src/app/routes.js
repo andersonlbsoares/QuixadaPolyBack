@@ -82,7 +82,8 @@ export default (gameController) => {
 	});
 
 	router.get("/sessao/:sessionNumber/jogar", SessionUserMiddleware, (req, res) => {
-		if(req.player.status === "waiting action"){
+		let player = req.player;
+		if(player.getStatus() === "waiting action"){
 			res.status(403).send(response);
 			return;
 		}
@@ -132,7 +133,8 @@ export default (gameController) => {
 		let tile = req.tile;
 		let session = req.session;
 		let response = player.payRent(tile.rent);
-		tile.owner.balance += tile.rent;
+		let owner = tile.owner.balance;
+		owner.receiveRent(tile.rent);
 		if(response?.code === 1){
 			res.status(403).send(response);
 			return;

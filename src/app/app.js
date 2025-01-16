@@ -15,17 +15,6 @@ app.use(
 app.use(express.json());
 
 const gameController = new GameController();
-
-import SessionController from "./Classes/SessionController.js";
-import Player from "./Classes/Player.js";
-const sessao = new SessionController(579);
-const player1 = new Player("Jogador 1", "#ff0000");
-const player2 = new Player("Jogador 2", "#ffff00");
-gameController.adicionarSessao(sessao);
-sessao.addPlayer(player1);
-sessao.addPlayer(player2);
-// sessao.startSession();
-// sessao.playTurn(player1.name);
 const routes = createRoutes(gameController);
 app.use(routes);
 

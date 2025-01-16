@@ -11,7 +11,6 @@ export default class Tile {
       route2: route2,
     }
   }
-
   onLand(player) {
     return `${player.name} caiu em ${this.name}`;
   }

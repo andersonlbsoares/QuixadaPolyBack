@@ -27,12 +27,24 @@ export default class Player {
 		this.balance -= value;
 	}
 
+	receiveRent(value) {
+		this.balance += value;
+	}
+
 	setJailStatus(status) {
 		this.isInJail = status;
 	}
 
 	setBankruptStatus(status) {
 		this.isBankrupt = status;
+	}
+
+	setStatus(status) {
+		this.status = status;
+	}
+
+	getStatus() {
+		return this.status;
 	}
 
 }

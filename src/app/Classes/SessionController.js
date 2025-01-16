@@ -12,7 +12,7 @@ export default class SessionController {
 		this.board = new Board();
 		this.currentPlayerIndex = 0;
 		this.isGameRunning = false;
-		this.sessionNumber = sessionNumber || this.startGame();
+		this.sessionNumber = sessionNumber || Math.floor(Math.random() * 1000);
 	}
 
 	//MANIPULAÇÃO DE PLAYER
@@ -48,7 +48,7 @@ export default class SessionController {
 			this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
 			player = this.players[this.currentPlayerIndex];
 		}while(player.isBankrupt);
-		player.status = "your turn";
+		player.setStatus("your turn");
 		
 	}
 
@@ -104,19 +104,19 @@ export default class SessionController {
 			resposta.message = `O vencedor é ${winner}`;
 			resposta.button1 = winner;
 			return resposta
-		} else if (player.status === "not your turn") {
+		} else if (player.getStatus() === "not your turn") {
 			resposta.message = "Não é sua vez.";
 			return resposta;
-		}else if (player.status === "your turn") {
+		}else if (player.getStatus() === "your turn") {
 			resposta.message = "Sua vez, role os dados.";
 			return resposta;
 		}
 	
 		if (currentTile instanceof Property) {
-			this.handlePropertyTile(player, currentTile, resposta)
+			this.#handlePropertyTile(player, currentTile, resposta)
 		}
 		else {
-			this.handleNonPropertyTile(currentTile, resposta);
+			this.#handleNonPropertyTile(currentTile, resposta);
 		}
 	
 		return resposta;
@@ -164,23 +164,23 @@ export default class SessionController {
 			dice2 = diceRoll.die2;
 			this.movePlayer(player, diceRoll.total);
 		}
-		player.status = "waiting action";
-		let status = this.statusGame();
+		player.setStatus("waiting action");
+		let status = this.statusSession();
 
 		status.diceRoll = { dice1, dice2 };
 		return status; 
 	}
 
 	endTurn(player) {
-		player.status = "not your turn";
+		player.setStatus("not your turn");
 		this.nextPlayer();
 		this.anotacoes.push(`O Jogador ${player.name} terminou o turno.`);
-		return this.statusGame();
+		return this.statusSession();
 	}
 
 	buyProperty(player) {
 		console.log("Comprando propriedade", player);
-		player.status = "not your turn";
+		player.setStatus("not your turn");
 		const currentTile = this.board.getTile(player.position);
 		if (currentTile.owner) {
 			console.log("A propriedade já tem dono.");
@@ -201,7 +201,7 @@ export default class SessionController {
 			this.anotacoes.push(`${player.name} comprou ${currentTile.name} por ${currentTile.price}.`);
 			this.nextPlayer();
 			
-			return this.statusGame();
+			return this.statusSession();
 		}else{
 			this.anotacoes.push("A propriedade não está à venda.");
 			return ({ message: "A propriedade não está à venda.", code: 1 });
@@ -227,16 +227,9 @@ export default class SessionController {
 
 
 	// MANIPULAÇÃO DE SESSÃO
-	startGame() {
-		const sessionNumber = Math.floor(Math.random() * 1000);
-		this.sessionNumber = sessionNumber;
-		this.anotacoes.push(`Sessão iniciada`);
-		return sessionNumber;
-	}
-
-	endGame() {
+	endSession() {
 		this.isGameRunning = false;
-		console.log(`O jogo terminou! O vencedor é ${this.players[0].name}`);
+		console.log(`O jogo terminou!`);
 	}
 
 	startSession() {
@@ -271,11 +264,11 @@ export default class SessionController {
 		});
 		this.anotacoes.push(`O Jogador ${this.players[this.currentPlayerIndex].name} começa o jogo.`);
 		let player = this.players[this.currentPlayerIndex];
-		player.status = "your turn";
+		player.setStatus("your turn");
 		return response;
 	}
 
-	statusGame() {
+	statusSession() {
 		return {
 			anotacoes: this.anotacoes,
 			session: this.sessionNumber,
@@ -288,23 +281,23 @@ export default class SessionController {
 
 
 	// Funções auxiliares
-	handlePropertyTile(player, currentTile, resposta) {
+	#handlePropertyTile(player, currentTile, resposta) {
 		if (currentTile.owner === player) {
-			this.handleOwnProperty(currentTile, resposta);
+			this.#handleOwnProperty(currentTile, resposta);
 		} else if (currentTile.owner) {
-			this.handleOtherPlayerProperty(player, currentTile, resposta);
+			this.#handleOtherPlayerProperty(player, currentTile, resposta);
 		} else {
-			this.handleUnownedProperty(player, currentTile, resposta);
+			this.#handleUnownedProperty(player, currentTile, resposta);
 		}
 	}
-	handleOwnProperty(currentTile, resposta) {
+	#handleOwnProperty(currentTile, resposta) {
 		resposta.message = `Você caiu em ${currentTile.name} que é sua propriedade, você pode construir por ${ (currentTile.price / 2).toFixed(2)} ou finalizar o turno.`;
 		resposta.button1 = "Finalizar Turno";
 		resposta.route1 = "passar";
 		resposta.button2 = "Construir";
 		resposta.route2 = "construir";
 	}
-	handleOtherPlayerProperty(player, currentTile, resposta) {
+	#handleOtherPlayerProperty(player, currentTile, resposta) {
 		if (player.balance >= currentTile.rent) {
 			resposta.message = `Você caiu em ${currentTile.name} que é de ${currentTile.owner.name} pague o aluguel de ${currentTile.rent}`;
 			resposta.button1 = "Pagar Aluguel";
@@ -316,7 +309,7 @@ export default class SessionController {
 			resposta.properties = this.board.tiles.filter(tile => tile.owner === player);
 		}
 	}
-	handleUnownedProperty(player, currentTile, resposta) {
+	#handleUnownedProperty(player, currentTile, resposta) {
 		if (player.balance >= currentTile.price) {
 			resposta.message = `Você caiu em ${currentTile.name} que está disponível para compra por ${currentTile.price}`;
 			resposta.button1 = "Comprar";
@@ -329,7 +322,7 @@ export default class SessionController {
 			resposta.route1 = "passar";
 		}
 	}
-	handleNonPropertyTile(currentTile, resposta) {
+	#handleNonPropertyTile(currentTile, resposta) {
 		resposta.message = currentTile.feedback.message;
 		resposta.button1 = currentTile.feedback.option1;
 		resposta.button2 = currentTile.feedback.option2;
