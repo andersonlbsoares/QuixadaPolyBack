@@ -14,7 +14,7 @@ export default class LuckTile extends Tile {
       let porcentagem = Math.floor(Math.random() * 50);
       let valor = Math.floor(player.balance * porcentagem / 100);
       player.balance = player.balance + (player.balance * porcentagem / 100);
-      return `${player.name} tirou uma grande sorte e ganhou + ${valor}% do seu saldo atual`; 
+      return `${player.name} tirou uma grande sorte e ganhou + ${porcentagem}% do seu saldo atual`; 
     }
   }
 }
